@@ -1,0 +1,32 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "composite": true,
+    "lib": ["ES2020", "DOM"],
+    "types": ["node", "jest", "@testing-library/jest-dom"],
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "moduleResolution": "bundler",
+    "module": "ESNext",
+    "target": "ESNext",
+    "verbatimModuleSyntax": false,
+    "allowJs": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": [
+    "env.d.ts",
+    "src/env.d.ts",
+    "src/shims-vue.d.ts",
+    "src/**/__tests__/**/*",
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue",
+    "jest.setup.ts"
+  ],
+  "exclude": ["node_modules", "e2e"]
+} 

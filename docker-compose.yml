@@ -1,0 +1,10 @@
+services:
+  speedrun-ui:
+    container_name: speedrun-ui-${ENVIRONMENT_ID}
+    build:
+      context: .
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+        VITE_API_TOKEN: ${VITE_API_TOKEN}
+    ports:
+      - '${HTTP_PORT}:80'
