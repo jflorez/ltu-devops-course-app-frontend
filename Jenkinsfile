@@ -29,7 +29,7 @@
  *   - Port: 3001
  * - Review:
  *   - Host: api-review.speedrun-app.example.com
- *   - Port: 3101 (production + 100)
+ *   - Port: 3101
  * This convention ensures clear separation between environments
  * and allows for different deployment targets
  *
@@ -80,13 +80,52 @@ pipeline {
     // with specific tools or capabilities
     agent any
 
+    parameters {
+        // Optional port overrides
+        string(name: 'OVERRIDE_FRONTEND_PORT', defaultValue: '', description: 'Optional: Override the default frontend port (main: 8080, develop: 8081, other branches: 5000-5499)')
+        string(name: 'OVERRIDE_API_PORT', defaultValue: '', description: 'Optional: Override the default API port (main: 3001, develop: 3002, other branches: 3100-3599)')
+        
+        // API configuration
+        string(name: 'VITE_API_BASE_URL', defaultValue: 'http://localhost', description: 'Base URL for the API endpoint')
+    }
+
     // Environment variables that will be available to all stages
     // These are crucial for configuration management and security
     environment {
-        PROD_API_PORT = '3001'                                     // Production API port
-        PROD_API_HOST = 'localhost'                                // Production API hostname
-        REVIEW_API_HOST = 'localhost'                              // Review API hostname
-        VITE_API_TOKEN = credentials('speedrun-api-token')         // Secure way to handle sensitive data
+        // Dynamic Port Assignment:
+        // - For main branch: Uses fixed production ports (8080 for frontend, 3001 for API)
+        // - For develop branch: Uses fixed test ports (8081 for frontend, 3002 for API)
+        // - For feature branches: Calculates unique ports based on build number to avoid conflicts
+        //   Frontend ports range: 5000-5499
+        //   API ports range: 3100-3599
+        HTTP_PORT = """${params.OVERRIDE_FRONTEND_PORT ?: (
+            env.BRANCH_NAME == 'main' ? '8080' : (
+            env.BRANCH_NAME == 'develop' ? '8081' : 
+            (5000 + (BUILD_NUMBER.toInteger() % 500))
+        ))}"""
+        API_PORT = """${params.OVERRIDE_API_PORT ?: (
+            env.BRANCH_NAME == 'main' ? '3001' : '3002'
+        )}"""
+
+        // Secure Credential Management:
+        // Jenkins credentials store sensitive data like tokens
+        // These are automatically masked in logs for security
+        VITE_API_TOKEN = credentials('speedrun-api-token')
+
+        // Environment Identification:
+        // Creates a unique identifier for each deployment environment
+        // - 'prod' for production (main branch)
+        // - 'test' for testing (develop branch)
+        // - 'review-{branch-name}-{build-number}' for feature branches
+        // The replaceAll regex removes any non-alphanumeric characters for clean environment names
+        ENVIRONMENT_ID = """${
+            env.BRANCH_NAME == 'main' ? 'prod' : (
+            env.BRANCH_NAME == 'develop' ? 'test' : 
+            'review-' + env.BRANCH_NAME.replaceAll(/[^a-zA-Z0-9]/, '-') + '-' + env.BUILD_NUMBER
+        )}"""
+
+        // Construct full API URL with dynamic port
+        VITE_API_BASE_URL = "${params.VITE_API_BASE_URL}:${API_PORT}"
     }
 
     // Configure how the pipeline will be triggered
@@ -96,31 +135,33 @@ pipeline {
         pollSCM('*/5 * * * *')
     }
 
-    // Pipeline options for build retention and trigger configuration
     options {
-        // Keep only the last 10 builds to conserve disk space
-        buildDiscarder(logRotator(numToKeepStr: '10'))
+        // Build retention strategy to manage disk space while maintaining useful history
+        // - Main branch: Keep 10 builds (production history)
+        // - Feature branches: Keep 3 builds for 2 days (temporary work)
+        buildDiscarder(logRotator(
+            numToKeepStr: BRANCH_NAME == 'main' || BRANCH_NAME == 'develop' ? '10' : '3',
+            daysToKeepStr: BRANCH_NAME == 'main' || BRANCH_NAME == 'develop' ? '' : '2'
+        ))
     }
 
     // Pipeline stages run sequentially and represent different phases of the pipeline
     stages {
+        // Stage 1: Source Code Management
+        stage('Checkout') {
+            steps {
+                // Fetch the latest code from version control
+                // 'scm' refers to the Source Control Management system configured in the job
+                checkout scm
+            }
+        }
         // Setup stage: Prepare the environment and install dependencies
         stage('Setup') {
             steps {
-                script {
-                    // Set API URL based on branch
-                    if (env.BRANCH_NAME == 'main') {
-                        env.VITE_API_BASE_URL = "https://${PROD_API_HOST}:${PROD_API_PORT}"
-                    } else {
-                        // Review environment uses production port + 100
-                        env.VITE_API_BASE_URL = "https://${REVIEW_API_HOST}:${PROD_API_PORT.toInteger() + 100}"
-                    }
-                }
                 // Enable corepack for better yarn version management
                 sh 'corepack enable'
                 // Install project dependencies using yarn
-                // --frozen-lockfile ensures consistent installations across builds
-                sh 'yarn install --frozen-lockfile'
+                sh 'yarn install'
             }
         }
 
@@ -142,22 +183,8 @@ pipeline {
         // Deploy to Review stage: Create a temporary environment for testing
         // This is part of the "Shift Left" testing strategy, allowing early testing
         stage('Deploy to Review') {
-            when {
-                // Only deploy review environment for non-main branches
-                // This is a common pattern for feature branch testing
-                not { branch 'main' }
-            }
             steps {
                 script {
-                    // Set unique environment variables for this deployment
-                    // This allows multiple review environments to coexist
-                    env.ENVIRONMENT_ID = "review-${BUILD_NUMBER}"  // Unique identifier for each build
-                    env.HTTP_PORT = "3000"                        // Port for the review environment
-                    
-                    // Use Docker Compose to build and start the application
-                    // -p: project name (for isolation)
-                    // -d: detached mode (run in background)
-                    // --build: rebuild images to ensure latest code is used
                     sh 'docker compose up -d --build --wait'
                     echo "Deployed to http://localhost:${HTTP_PORT}"
                 }
@@ -167,7 +194,7 @@ pipeline {
         // E2E Tests stage: Run end-to-end tests against the review environment
         stage('E2E Tests') {
             when {
-                // Only run E2E tests for review environments (non-main branches)
+                // Only run E2E tests for test and review environments (non-main branches)
                 not { branch 'main' }
             }
             environment {
@@ -175,12 +202,7 @@ pipeline {
                 PLAYWRIGHT_URL = "http://localhost:${HTTP_PORT}"
             }
             steps {
-                sh """
-                    cd e2e
-                    yarn install --frozen-lockfile
-                    yarn playwright install --with-deps
-                    yarn test:e2e
-                """
+                sh 'yarn test:e2e'
             }
             post {
                 always {
@@ -190,42 +212,56 @@ pipeline {
             }
         }
 
+        stage('Build') {
+            when {
+                // Only build Docker images for develop and main branches
+                anyOf {
+                    branch 'develop'
+                    branch 'main'
+                }
+            }
+            steps {
+                // Build Docker images using docker-compose
+                // This creates consistent, reproducible environments
+                // In real world use the images will be stored in a registry and pulled from there during deployment
+                sh 'docker compose build'
+            }
+        }
+
+        stage('Deploy Test') {
+            when {
+                // Only deploy test environment for develop branch
+                branch 'develop'
+            }
+            steps {
+                sh 'docker compose down -v --remove-orphans'
+                sh 'docker compose up -d --wait'
+                echo "Deployed to http://localhost:${HTTP_PORT}"
+            }
+        }
+
         // Deploy to Production stage: Deploy the application to production
-        stage('Deploy to Production') {
+        stage('Deploy Production') {
             when {
                 // Only deploy to production from the main branch
                 // This is a common production deployment safety measure
                 branch 'main'
             }
             steps {
-                // Manual approval step for production deployments
-                // This is a common practice for critical environments
-                input message: 'Deploy to production?'
-                script {
-                    // Set production environment variables
-                    env.ENVIRONMENT_ID = "prod"
-                    env.HTTP_PORT = "8080"
-                    
-                    // Deploy to production using Docker Compose
-                    sh 'docker compose up -d --build --wait'
-                    echo "Deployed to http://localhost:${HTTP_PORT}"
-                }
+                sh 'docker compose down --remove-orphans'
+                sh 'docker compose up -d --wait'
+                echo "Deployed to http://localhost:${HTTP_PORT}"
+                echo "Production deployment complete"
             }
         }
     }
 
-    // Post-pipeline actions
+    // Post-build actions
     post {
-        // 'always' section runs regardless of pipeline success/failure
+        // Always perform these actions to clean up after the build
         always {
-            script {
-                    // Clean up Docker containers to prevent resource buildup
-                    // This is important for maintaining server resources
-                    sh 'docker compose down'
-                }
-            }
-            // Clean up workspace to save disk space
-            cleanWs()
+            // Clean up test artifacts to save disk space
+            cleanWs(patterns: [[pattern: 'test-results/**', type: 'INCLUDE']])
         }
     }
 }
