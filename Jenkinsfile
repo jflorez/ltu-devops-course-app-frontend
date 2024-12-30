@@ -256,12 +256,12 @@ pipeline {
         }
     }
 
-    // Post-build actions
-    // post {
-    //     // Always perform these actions to clean up after the build
-    //     always {
-    //         // Clean up test artifacts to save disk space
-    //         cleanWs(patterns: [[pattern: 'test-results/**', type: 'INCLUDE']])
-    //     }
-    // }
+    Post-build actions
+    post {
+        // Always perform these actions to clean up after the build
+        always {
+            // Clean up test artifacts to save disk space
+            cleanWs(patterns: [[pattern: 'test-results/**', type: 'INCLUDE']])
+        }
+    }
 }
