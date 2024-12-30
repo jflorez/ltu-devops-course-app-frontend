@@ -224,6 +224,7 @@ pipeline {
                 PLAYWRIGHT_URL = "http://localhost:${HTTP_PORT}"
             }
             steps {
+                sh 'yarn playwright install'
                 sh 'yarn test:e2e'
             }
             post {
