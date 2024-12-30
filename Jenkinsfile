@@ -180,14 +180,36 @@ pipeline {
             }
         }
 
-        // Deploy to Review stage: Create a temporary environment for testing
-        // This is part of the "Shift Left" testing strategy, allowing early testing
-        stage('Deploy to Review') {
-            steps {
-                script {
-                    sh 'docker compose up -d --build --wait'
-                    echo "Deployed to http://localhost:${HTTP_PORT}"
+        
+
+        stage('Build') {
+            when {
+                // Only build Docker images for develop and main branches
+                anyOf {
+                    branch 'develop'
+                    branch 'main'
                 }
+            }
+            steps {
+                // Build Docker images using docker-compose
+                // This creates consistent, reproducible environments
+                // In real world use the images will be stored in a registry and pulled from there during deployment
+                sh 'docker compose build'
+            }
+        }
+
+        stage('Deploy Review/Test') {
+            when {
+                // Deploy test environment for develop branch and feature branches
+                anyOf {
+                    branch 'develop'
+                    branch pattern: "feature/*", comparator: "GLOB"
+                }
+            }
+            steps {
+                sh 'docker compose down -v --remove-orphans'
+                sh 'docker compose up -d --wait'
+                echo "Deployed to http://localhost:${HTTP_PORT}"
             }
         }
 
@@ -212,31 +234,12 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        stage('Cleanup Review') {
             when {
-                // Only build Docker images for develop and main branches
-                anyOf {
-                    branch 'develop'
-                    branch 'main'
-                }
-            }
-            steps {
-                // Build Docker images using docker-compose
-                // This creates consistent, reproducible environments
-                // In real world use the images will be stored in a registry and pulled from there during deployment
-                sh 'docker compose build'
-            }
-        }
-
-        stage('Deploy Test') {
-            when {
-                // Only deploy test environment for develop branch
-                branch 'develop'
+                branch pattern: "feature/*", comparator: "GLOB"
             }
             steps {
                 sh 'docker compose down -v --remove-orphans'
-                sh 'docker compose up -d --wait'
-                echo "Deployed to http://localhost:${HTTP_PORT}"
             }
         }
 
