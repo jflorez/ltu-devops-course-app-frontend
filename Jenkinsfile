@@ -229,7 +229,7 @@ pipeline {
             post {
                 always {
                     // Publish E2E test results
-                    junit 'e2e/test-results/junit.xml'
+                    junit 'e2e/test-results/junit-results.xml'
                 }
             }
         }
