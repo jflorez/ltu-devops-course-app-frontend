@@ -1,4 +1,6 @@
 !.gitignore
+.yarn/
+.pnpm-store/
 # Logs
 logs
 *.log
