@@ -123,10 +123,10 @@ pipeline {
         )}"""
 
         // Docker host constant for container-to-host communication
-        DOCKER_HOST = 'host.docker.internal'
+        FRONTEND_HOST = 'host.docker.internal'
 
         // Construct full API URL with dynamic port, allowing for override
-        VITE_API_BASE_URL = """${params.OVERRIDE_API_BASE_URL ?: "http://${DOCKER_HOST}:${API_PORT}"}"""
+        VITE_API_BASE_URL = """${params.OVERRIDE_API_BASE_URL ?: "http://${FRONTEND_HOST}:${API_PORT}"}"""
     }
 
     // Configure how the pipeline will be triggered
@@ -210,7 +210,7 @@ pipeline {
             steps {
                 sh 'docker compose down -v --remove-orphans'
                 sh 'docker compose up -d --wait'
-                echo "Deployed to http://${DOCKER_HOST}:${HTTP_PORT}"
+                echo "Deployed to http://${FRONTEND_HOST}:${HTTP_PORT}"
             }
         }
 
@@ -222,7 +222,7 @@ pipeline {
             }
             environment {
                 // Configure Playwright to test the review deployment
-                PLAYWRIGHT_TEST_BASE_URL = "http://${DOCKER_HOST}:${HTTP_PORT}"
+                PLAYWRIGHT_TEST_BASE_URL = "http://${FRONTEND_HOST}:${HTTP_PORT}"
             }
             steps {
                 sh 'yarn playwright install-deps'
@@ -256,7 +256,7 @@ pipeline {
             steps {
                 sh 'docker compose down --remove-orphans'
                 sh 'docker compose up -d --wait'
-                echo "Deployed to http://${DOCKER_HOST}:${HTTP_PORT}"
+                echo "Deployed to http://${FRONTEND_HOST}:${HTTP_PORT}"
                 echo "Production deployment complete"
             }
         }
