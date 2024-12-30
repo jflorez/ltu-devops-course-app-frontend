@@ -9,7 +9,7 @@
  * - E2E tests run only on feature branch deployments
  *
  * Required Jenkins Credentials:
- * - speedrun-api-token: API token for backend authentication
+ * - app-api-token: API token for backend authentication
  *   Used as VITE_API_TOKEN in the application
  *
  * Environment Configuration:
@@ -110,7 +110,7 @@ pipeline {
         // Secure Credential Management:
         // Jenkins credentials store sensitive data like tokens
         // These are automatically masked in logs for security
-        VITE_API_TOKEN = credentials('speedrun-api-token')
+        VITE_API_TOKEN = credentials('app-api-token')
 
         // Environment Identification:
         // Creates a unique identifier for each deployment environment
