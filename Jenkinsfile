@@ -1,73 +1,90 @@
 /**
- * Jenkins Pipeline Configuration for Speedrun Tracker Frontend
+ * Modern DevOps Pipeline Example
  * 
- * This Jenkinsfile implements a trunk-based development workflow where:
- * - 'main' branch is the trunk (source of truth)
- * - Feature branches are short-lived (usually less than 2 days)
- * - All changes are integrated frequently into the trunk
- * - Only trunk (main) gets deployed to production
- * - E2E tests run only on feature branch deployments
+ * This pipeline configuration demonstrates core DevOps principles and practices
+ * through a Vue.js application deployment. It serves as a learning example for
+ * understanding fundamental DevOps concepts.
  *
- * Required Jenkins Credentials:
- * - app-api-token: API token for backend authentication
- *   Used as VITE_API_TOKEN in the application
+ * Core DevOps Concepts Demonstrated:
  *
- * Environment Configuration:
- * - VITE_API_BASE_URL: Backend API endpoint
- *   - Production: https://api.speedrun-app.example.com:3001
- *   - Review: https://api-review.speedrun-app.example.com:3101
- * - ENVIRONMENT_ID: Automatically set by pipeline
- *   - review-{BUILD_NUMBER} for feature branches
- *   - prod for production deployment
- * - HTTP_PORT: Frontend application port
- *   - Review: 3000
- *   - Production: 8080
+ * 1. Continuous Integration & Continuous Deployment (CI/CD):
+ *    - Automated build and deployment pipeline
+ *    - Multiple environment support
+ *    - Automated testing at multiple stages
+ *    - Consistent deployment processes
  *
- * API Configuration:
- * - Production:
- *   - Host: api.speedrun-app.example.com
- *   - Port: 3001
- * - Review:
- *   - Host: api-review.speedrun-app.example.com
- *   - Port: 3101
- * This convention ensures clear separation between environments
- * and allows for different deployment targets
+ * 2. GitOps & Branch Strategy:
+ *    - Production branch (main) → Live environment
+ *    - Development branch (develop) → Testing environment
+ *    - Feature branches → Review environments
+ *    This represents standard git workflow practices in modern development.
  *
- * Docker Configuration:
- * - Uses Docker Compose for containerization
- * - Project names ensure environment isolation:
- *   - Review: speedrun-review-{BUILD_NUMBER}
- *   - Production: speedrun-prod
- * - Containers are automatically cleaned up post-deployment
- *
- * DevOps Learning Points:
- * 1. Continuous Integration (CI):
- *    - Automated testing on every code change
- *    - Unit tests run on all branches
- *    - E2E tests run only on feature branches
- *    - Test results published in JUnit format
- * 
- * 2. Continuous Deployment (CD):
- *    - Automated deployments to review environment
- *    - Manual approval for production deployments
+ * 3. Environment Management:
+ *    - Isolated environments for different purposes
+ *    - Dynamic resource allocation
  *    - Environment-specific configurations
- *    - Container-based deployments
- * 
- * 3. Best Practices:
- *    - Environment separation (review vs prod)
- *    - Port isolation between environments
- *    - Automated cleanup of resources
- *    - Regular SCM polling (every 5 minutes)
- *    - Build history management (keep last 10)
  *    - Secure credential handling
- *    - Workspace cleanup post-deployment
- *    - Environment-specific hostnames
- * 
- * 4. Testing Strategy:
- *    - Unit tests for all branches
- *    - E2E tests only for review environments
- *    - "Shift Left" testing with early feature validation
- *    - Test result tracking and analysis
+ *
+ * 4. Infrastructure as Code (IaC):
+ *    - Containerized applications
+ *    - Declarative configuration
+ *    - Reproducible environments
+ *    - Automated infrastructure management
+ *
+ * 5. Testing Strategy:
+ *    - Shift-Left Testing approach
+ *    - Multiple testing layers:
+ *      * Unit testing for components
+ *      * End-to-end testing for integration
+ *    - Automated test execution
+ *    - Test result reporting and analysis
+ *
+ * 6. Pipeline Stages (Standard CI/CD Flow):
+ *    a) Source → Retrieve code
+ *    b) Dependencies → Prepare build environment
+ *    c) Test → Verify code quality
+ *    d) Build → Create deployable artifacts
+ *    e) Deploy → Release to appropriate environment
+ *    f) Validate → Verify deployment
+ *    g) Cleanup → Manage resources
+ *
+ * 7. DevOps Best Practices:
+ *    - Automated processes
+ *    - Environment isolation
+ *    - Resource management
+ *    - Build artifact retention
+ *    - Workspace maintenance
+ *    - Continuous monitoring
+ *
+ * 8. Configuration Management:
+ *    - Environment variables
+ *    - Secure secrets handling
+ *    - Dynamic configuration
+ *    - Port management
+ *
+ * 9. Resource Optimization:
+ *    - Cleanup of temporary resources
+ *    - Build history management
+ *    - Workspace cleanup
+ *    - Container lifecycle management
+ *
+ * 10. Pipeline Triggers:
+ *    - Source code change detection
+ *    - Automated pipeline execution
+ *    - Branch-specific behaviors
+ *
+ * Common Pipeline Parameters:
+ * - Frontend port configuration
+ * - API endpoint configuration
+ * - Base URL configuration
+ *
+ * This implementation showcases the integration of:
+ * - Version Control
+ * - Containerization
+ * - Automated Testing
+ * - Configuration Management
+ * - Environment Management
+ * - Continuous Deployment
  */
 
 // This Jenkinsfile defines a CI/CD pipeline for a Vue.js frontend application
@@ -146,97 +163,99 @@ pipeline {
         ))
     }
 
-    // Pipeline stages run sequentially and represent different phases of the pipeline
+    // Pipeline stages represent the core DevOps workflow phases
+    // Each stage represents a distinct step in the software delivery process
     stages {
-        // Stage 1: Source Code Management
+        // Source Code Management
+        // Retrieves latest code and establishes the build context
         stage('Checkout') {
             steps {
-                // Fetch the latest code from version control
-                // 'scm' refers to the Source Control Management system configured in the job
+                // Standard SCM checkout for version control integration
                 checkout scm
             }
         }
-        // Setup stage: Prepare the environment and install dependencies
+
+        // Environment Preparation
+        // Sets up build tools and project dependencies
         stage('Setup') {
             steps {
-                // Enable corepack for better yarn version management
+                // Enable package manager version control
                 sh 'corepack enable'
-                // Install project dependencies using yarn
+                // Install project dependencies
                 sh 'yarn install'
             }
         }
 
-        // Unit Tests stage: Run automated tests to verify individual components
+        // Quality Assurance - Unit Testing
+        // Executes component-level tests and generates coverage reports
         stage('Unit Tests') {
             steps {
-                // Run Jest tests with coverage reporting
                 sh 'yarn test:coverage'
             }
             post {
-                // 'post' section defines actions to take after stage completion
+                // Collect test results for analysis
                 always {
-                    // Publish test results in JUnit format for Jenkins to analyze
                     junit 'coverage/junit.xml'
                 }
             }
         }
 
-        
-
+        // Artifact Creation
+        // Builds Docker images for deployment
         stage('Build') {
             when {
-                // Only build Docker images for develop and main branches
+                // Build artifacts for main deployment branches
                 anyOf {
                     branch 'develop'
                     branch 'main'
                 }
             }
             steps {
-                // Build Docker images using docker-compose
-                // This creates consistent, reproducible environments
-                // In real world use the images will be stored in a registry and pulled from there during deployment
                 sh 'docker compose build'
             }
         }
 
+        // Non-Production Deployment
+        // Handles deployments to development and review environments
         stage('Deploy Review/Test') {
             when {
-                // Deploy test environment for develop branch and feature branches
                 anyOf {
                     branch 'develop'
                     branch pattern: "feature/*", comparator: "GLOB"
                 }
             }
             steps {
+                // Clean environment and deploy
                 sh 'docker compose down -v --remove-orphans'
                 sh 'docker compose up -d --wait'
                 echo "Deployed to http://${FRONTEND_HOST}:${HTTP_PORT}"
             }
         }
 
-        // E2E Tests stage: Run end-to-end tests against the review environment
+        // Integration Testing
+        // Executes E2E tests against deployed environment
         stage('E2E Tests') {
             when {
-                // Only run E2E tests for test and review environments (non-main branches)
                 not { branch 'main' }
             }
             environment {
-                // Configure Playwright to test the review deployment
                 PLAYWRIGHT_TEST_BASE_URL = "http://${FRONTEND_HOST}:${HTTP_PORT}"
             }
             steps {
+                // Setup and execute E2E test suite
                 sh 'yarn playwright install-deps'
                 sh 'yarn playwright install'
                 sh 'yarn test:e2e'
             }
             post {
                 always {
-                    // Publish E2E test results
                     junit 'e2e/test-results/junit-results.xml'
                 }
             }
         }
 
+        // Resource Management
+        // Cleans up review environments to prevent resource saturation
         stage('Cleanup Review') {
             when {
                 branch pattern: "feature/*", comparator: "GLOB"
@@ -246,11 +265,10 @@ pipeline {
             }
         }
 
-        // Deploy to Production stage: Deploy the application to production
+        // Production Release
+        // Manages deployment to production environment
         stage('Deploy Production') {
             when {
-                // Only deploy to production from the main branch
-                // This is a common production deployment safety measure
                 branch 'main'
             }
             steps {
@@ -262,11 +280,10 @@ pipeline {
         }
     }
 
-    // Post-build actions
+    // Pipeline Cleanup
+    // Handles post-execution workspace management
     post {
-        // Always perform these actions to clean up after the build
         always {
-            // Clean up test artifacts to save disk space
             cleanWs(patterns: [[pattern: 'test-results/**', type: 'INCLUDE']])
         }
     }
