@@ -138,9 +138,6 @@ pipeline {
             'review-' + env.BRANCH_NAME.replaceAll(/[^a-zA-Z0-9]/, '-') + '-' + env.BUILD_NUMBER
         )}"""
 
-        // Docker host constant for container-to-host communication
-        FRONTEND_HOST = 'host.docker.internal'
-
         // Construct full API URL with dynamic port, allowing for override
         VITE_API_BASE_URL = """${params.OVERRIDE_API_BASE_URL ?: "http://localhost:${API_PORT}"}"""
     }
@@ -238,7 +235,7 @@ pipeline {
                 not { branch 'main' }
             }
             environment {
-                PLAYWRIGHT_TEST_BASE_URL = "http://${FRONTEND_HOST}:${HTTP_PORT}"
+                PLAYWRIGHT_TEST_BASE_URL = "http://host.docker.internal:${HTTP_PORT}"
             }
             steps {
                 // Setup and execute E2E test suite
