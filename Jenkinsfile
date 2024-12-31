@@ -1,5 +1,5 @@
 /**
- * Modern DevOps Pipeline Example
+ * DevOps Pipeline Example
  * 
  * This pipeline configuration demonstrates core DevOps principles and practices
  * through a Vue.js application deployment. It serves as a learning example for
@@ -112,7 +112,6 @@ pipeline {
         // - For develop branch: Uses fixed test ports (8081 for frontend, 3002 for API)
         // - For feature branches: Calculates unique ports based on build number to avoid conflicts
         //   Frontend ports range: 5000-5499
-        //   API ports range: 3100-3599
         HTTP_PORT = """${params.OVERRIDE_FRONTEND_PORT ?: (
             env.BRANCH_NAME == 'main' ? '8080' : (
             env.BRANCH_NAME == 'develop' ? '8081' : 
