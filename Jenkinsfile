@@ -142,7 +142,7 @@ pipeline {
         FRONTEND_HOST = 'host.docker.internal'
 
         // Construct full API URL with dynamic port, allowing for override
-        VITE_API_BASE_URL = """${params.OVERRIDE_API_BASE_URL ?: "http://${FRONTEND_HOST}:${API_PORT}"}"""
+        VITE_API_BASE_URL = """${params.OVERRIDE_API_BASE_URL ?: "http://localhost:${API_PORT}"}"""
     }
 
     // Configure how the pipeline will be triggered
