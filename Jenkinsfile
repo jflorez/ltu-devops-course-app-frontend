@@ -227,7 +227,7 @@ pipeline {
                 // Clean environment and deploy
                 sh 'docker compose down -v --remove-orphans'
                 sh 'docker compose up -d --wait'
-                echo "Deployed to http://${FRONTEND_HOST}:${HTTP_PORT}"
+                echo "Deployed to http://localhost:${HTTP_PORT}"
             }
         }
 
@@ -273,7 +273,7 @@ pipeline {
             steps {
                 sh 'docker compose down --remove-orphans'
                 sh 'docker compose up -d --wait'
-                echo "Deployed to http://${FRONTEND_HOST}:${HTTP_PORT}"
+                echo "Deployed to http://localhost:${HTTP_PORT}"
                 echo "Production deployment complete"
             }
         }
