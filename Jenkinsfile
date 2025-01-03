@@ -5,6 +5,11 @@
  * in modern software development. We use a Vue.js application as our case study
  * to show how theory applies to real-world scenarios.
  *
+ * Important considerations:
+ *
+ * - In real-world scenarios, you'll have more environments and more complex configurations. 
+ * - In this example all our deployments are done using docker compose in the same host, in real world scenarios deployments of different environments will be done against cloud infrastructure
+ *
  * Key Learning Objectives:
  *
  * 1. Understanding CI/CD (Continuous Integration/Continuous Deployment):
@@ -68,8 +73,6 @@
  * - Frontend runs on different ports for different environments
  * - API endpoints change between environments
  * - Each environment is isolated from others
- * - In real-world scenarios, you'll have more environments and more complex configurations. 
- * - In this example all our deployments are done using docker compose in the same host, in real world scenarios deployments of different environments will be done against cloud infrastructure
  *
  * This example brings together:
  * - Modern web development (Vue.js)
