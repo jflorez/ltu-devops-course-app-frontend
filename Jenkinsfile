@@ -126,18 +126,6 @@ pipeline {
         // These are automatically masked in logs for security
         VITE_API_TOKEN = credentials('app-api-token')
 
-        // Environment Identification:
-        // Creates a unique identifier for each deployment environment
-        // - 'prod' for production (main branch)
-        // - 'test' for testing (develop branch)
-        // - 'review-{branch-name}-{build-number}' for feature branches
-        // The replaceAll regex removes any non-alphanumeric characters for clean environment names
-        ENVIRONMENT_ID = """${
-            env.BRANCH_NAME == 'main' ? 'prod' : (
-            env.BRANCH_NAME == 'develop' ? 'test' : 
-            'review-' + env.BRANCH_NAME.replaceAll(/[^a-zA-Z0-9]/, '-') + '-' + env.BUILD_NUMBER
-        )}"""
-
         // Construct full API URL with dynamic port, allowing for override
         VITE_API_BASE_URL = """${params.OVERRIDE_API_BASE_URL ?: "http://localhost:${API_PORT}"}"""
     }
@@ -199,13 +187,6 @@ pipeline {
         // Artifact Creation
         // Builds Docker images for deployment
         stage('Build') {
-            when {
-                // Build artifacts for main deployment branches
-                anyOf {
-                    branch 'develop'
-                    branch 'main'
-                }
-            }
             steps {
                 sh 'docker compose build'
             }
@@ -213,16 +194,29 @@ pipeline {
 
         // Non-Production Deployment
         // Handles deployments to development and review environments
-        stage('Deploy Review/Test') {
+        stage('Deploy Test') {
+            environment {
+                ENVIRONMENT_ID = 'test'
+            }
             when {
-                anyOf {
-                    branch 'develop'
-                    branch pattern: "feature/*", comparator: "GLOB"
-                }
+                branch 'develop'
             }
             steps {
                 // Clean environment and deploy
-                sh 'docker compose down -v --remove-orphans'
+                sh 'docker compose up -d --wait'
+                echo "Deployed to http://localhost:${HTTP_PORT}"
+            }
+        }
+
+         stage('Deploy Review') {
+            environment {
+                ENVIRONMENT_ID = "${'review-' + env.BRANCH_NAME.replaceAll(/[^a-zA-Z0-9]/, '-') + '-' + env.BUILD_NUMBER}"
+            }
+            when {
+                branch pattern: "feature/*", comparator: "GLOB"
+            }
+            steps {
+                // Clean environment and deploy
                 sh 'docker compose up -d --wait'
                 echo "Deployed to http://localhost:${HTTP_PORT}"
             }
@@ -253,6 +247,9 @@ pipeline {
         // Resource Management
         // Cleans up review environments to prevent resource saturation
         stage('Cleanup Review') {
+            environment {
+                ENVIRONMENT_ID = "${'review-' + env.BRANCH_NAME.replaceAll(/[^a-zA-Z0-9]/, '-') + '-' + env.BUILD_NUMBER}"
+            }
             when {
                 branch pattern: "feature/*", comparator: "GLOB"
             }
@@ -264,11 +261,13 @@ pipeline {
         // Production Release
         // Manages deployment to production environment
         stage('Deploy Production') {
+            environment {
+                ENVIRONMENT_ID = 'prod'
+            }
             when {
                 branch 'main'
             }
             steps {
-                sh 'docker compose down --remove-orphans'
                 sh 'docker compose up -d --wait'
                 echo "Deployed to http://localhost:${HTTP_PORT}"
                 echo "Production deployment complete"
