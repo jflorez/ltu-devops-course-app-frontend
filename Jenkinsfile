@@ -84,8 +84,11 @@
 
 pipeline {
     // Jenkins needs to know where to run this pipeline
-    // 'agent any' means it can run on any available Jenkins worker
-    agent any
+    agent {
+        docker {
+            image 'jenkins-agent-node22:latest'
+        }
+    }
 
     parameters {
         // These parameters let us override default settings
