@@ -162,10 +162,10 @@ pipeline {
             steps {
                 // Run unit tests and measure code coverage
                 sh 'yarn test:coverage'
-                // Make method names unique by appending a counter
+                // Make ALL method names unique by appending the build number
                 sh '''
                     cp coverage/cobertura-coverage.xml coverage/cobertura-coverage-original.xml
-                    cat coverage/cobertura-coverage-original.xml | sed 's/name="step()V"/name="step()V_${BUILD_NUMBER}"/g' > coverage/cobertura-coverage.xml
+                    cat coverage/cobertura-coverage-original.xml | sed 's/name="\\([^"]*\\)"/name="\\1_${BUILD_NUMBER}"/g' > coverage/cobertura-coverage.xml
                 '''
             }
             post {
