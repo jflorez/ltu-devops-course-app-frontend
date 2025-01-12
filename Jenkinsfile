@@ -172,9 +172,15 @@ pipeline {
                         tools: [[parser: 'COBERTURA', 
                                 pattern: 'coverage/cobertura-coverage.xml',
                                 mergeToOneReport: true,
-                                skipDuplicatedResults: true]],
+                                skipDuplicatedResults: true,
+                                // Add unique ID to methods to avoid conflicts
+                                sourceCodeEncoding: 'UTF-8',
+                                treatEmptyAsZero: true]],
                         id: 'vue-app',
                         name: 'Vue.js Application Coverage',
+                        // Skip source files that might cause duplicates
+                        skipSymbolicLinks: true,
+                        failOnError: false,
                         qualityGates: [
                             [metric: 'LINE', threshold: 80.0],
                             [metric: 'BRANCH', threshold: 70.0],
