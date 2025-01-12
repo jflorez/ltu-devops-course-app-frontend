@@ -160,16 +160,16 @@ pipeline {
 
         stage('Unit Tests') {
             steps {
-                // Run unit tests and generate Istanbul coverage
+                // Run unit tests and generate LCOV coverage
                 sh 'yarn test:coverage'
             }
             post {
                 always {
                     // Report JUnit test results
                     junit 'coverage/junit.xml'
-                    // Simplified coverage reporting
+                    // Use the LCOV parser for coverage reporting
                     recordCoverage(
-                        tools: [[parser: 'JAVASCRIPT', pattern: 'coverage/coverage-final.json']]
+                        tools: [[parser: 'LCOV', pattern: 'coverage/lcov.info']]
                     )
                 }
             }
