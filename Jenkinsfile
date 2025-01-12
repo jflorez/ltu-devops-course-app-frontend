@@ -160,26 +160,17 @@ pipeline {
 
         stage('Unit Tests') {
             steps {
-                // Run unit tests and measure code coverage
+                // Run unit tests and generate Istanbul coverage
                 sh 'yarn test:coverage'
-                // Make ALL method names unique by appending the build number
-                sh """
-                    cp coverage/cobertura-coverage.xml coverage/cobertura-coverage-original.xml
-                    cat coverage/cobertura-coverage-original.xml | sed 's/name="\\([^"]*\\)"/name="\\1_${BUILD_NUMBER}"/g' > coverage/cobertura-coverage.xml
-                """
             }
             post {
                 always {
                     // Report JUnit test results
                     junit 'coverage/junit.xml'
-                    // Report coverage results using new Coverage plugin
+                    // Report coverage using Istanbul/NYC
                     recordCoverage(
-                        tools: [[parser: 'COBERTURA', 
-                                pattern: 'coverage/cobertura-coverage.xml',
-                                mergeToOneReport: true,
-                                skipDuplicatedResults: true,
-                                sourceCodeEncoding: 'UTF-8',
-                                treatEmptyAsZero: true]],
+                        tools: [[parser: 'ISTANBUL', 
+                                pattern: 'coverage/coverage-final.json']],
                         id: 'vue-app',
                         name: 'Vue.js Application Coverage',
                         skipSymbolicLinks: true,
