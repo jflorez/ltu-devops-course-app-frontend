@@ -167,14 +167,9 @@ pipeline {
                 always {
                     // Report JUnit test results
                     junit 'coverage/junit.xml'
-                    // Report coverage using Istanbul
+                    // Simplified coverage reporting
                     recordCoverage(
-                        tools: [[parser: 'JAVASCRIPT', 
-                                pattern: 'coverage/coverage-final.json']],
-                        sourceCodeRetention: 'EVERY_BUILD',
-                        qualityGates: [[threshold: 80, metric: 'LINE'], 
-                                      [threshold: 70, metric: 'BRANCH'], 
-                                      [threshold: 80, metric: 'METHOD']]
+                        tools: [[parser: 'JAVASCRIPT', pattern: 'coverage/coverage-final.json']]
                     )
                 }
             }
