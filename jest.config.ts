@@ -31,7 +31,7 @@ const config: Config.InitialOptions = {
   },
   collectCoverage: true,
   coverageDirectory: 'coverage',
-  coverageReporters: ['html', 'text', 'text-summary'],
+  coverageReporters: ['html', 'text', 'text-summary', 'cobertura'],
   reporters: [
     'default',
     ['jest-junit', {

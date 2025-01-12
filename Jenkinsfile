@@ -164,9 +164,21 @@ pipeline {
                 sh 'yarn test:coverage'
             }
             post {
-                // Save test results for later analysis
                 always {
+                    // Report JUnit test results
                     junit 'coverage/junit.xml'
+                    // Report coverage results using new Coverage plugin
+                    recordCoverage(
+                        tools: [[parser: 'COBERTURA', pattern: 'coverage/cobertura-coverage.xml']],
+                        id: 'vue-app',
+                        name: 'Vue.js Application Coverage',
+                        // Set coverage targets
+                        qualityGates: [
+                            [metric: 'LINE', threshold: 80.0],
+                            [metric: 'BRANCH', threshold: 70.0],
+                            [metric: 'METHOD', threshold: 80.0]
+                        ]
+                    )
                 }
             }
         }
