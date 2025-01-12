@@ -169,10 +169,12 @@ pipeline {
                     junit 'coverage/junit.xml'
                     // Report coverage results using new Coverage plugin
                     recordCoverage(
-                        tools: [[parser: 'COBERTURA', pattern: 'coverage/cobertura-coverage.xml']],
+                        tools: [[parser: 'COBERTURA', 
+                                pattern: 'coverage/cobertura-coverage.xml',
+                                mergeToOneReport: true,
+                                skipDuplicatedResults: true]],
                         id: 'vue-app',
                         name: 'Vue.js Application Coverage',
-                        // Set coverage targets
                         qualityGates: [
                             [metric: 'LINE', threshold: 80.0],
                             [metric: 'BRANCH', threshold: 70.0],
