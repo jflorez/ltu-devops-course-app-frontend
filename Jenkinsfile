@@ -167,19 +167,14 @@ pipeline {
                 always {
                     // Report JUnit test results
                     junit 'coverage/junit.xml'
-                    // Report coverage using Istanbul/NYC
+                    // Report coverage using Istanbul
                     recordCoverage(
-                        tools: [[parser: 'ISTANBUL', 
+                        tools: [[parser: 'JAVASCRIPT', 
                                 pattern: 'coverage/coverage-final.json']],
-                        id: 'vue-app',
-                        name: 'Vue.js Application Coverage',
-                        skipSymbolicLinks: true,
-                        failOnError: false,
-                        qualityGates: [
-                            [metric: 'LINE', threshold: 80.0],
-                            [metric: 'BRANCH', threshold: 70.0],
-                            [metric: 'METHOD', threshold: 80.0]
-                        ]
+                        sourceCodeRetention: 'EVERY_BUILD',
+                        qualityGates: [[threshold: 80, metric: 'LINE'], 
+                                      [threshold: 70, metric: 'BRANCH'], 
+                                      [threshold: 80, metric: 'METHOD']]
                     )
                 }
             }
