@@ -162,6 +162,11 @@ pipeline {
             steps {
                 // Run unit tests and measure code coverage
                 sh 'yarn test:coverage'
+                // Make method names unique by appending a counter
+                sh '''
+                    cp coverage/cobertura-coverage.xml coverage/cobertura-coverage-original.xml
+                    cat coverage/cobertura-coverage-original.xml | sed 's/name="step()V"/name="step()V_${BUILD_NUMBER}"/g' > coverage/cobertura-coverage.xml
+                '''
             }
             post {
                 always {
@@ -173,12 +178,10 @@ pipeline {
                                 pattern: 'coverage/cobertura-coverage.xml',
                                 mergeToOneReport: true,
                                 skipDuplicatedResults: true,
-                                // Add unique ID to methods to avoid conflicts
                                 sourceCodeEncoding: 'UTF-8',
                                 treatEmptyAsZero: true]],
                         id: 'vue-app',
                         name: 'Vue.js Application Coverage',
-                        // Skip source files that might cause duplicates
                         skipSymbolicLinks: true,
                         failOnError: false,
                         qualityGates: [
