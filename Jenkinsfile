@@ -167,10 +167,6 @@ pipeline {
                 always {
                     // Report JUnit test results
                     junit 'coverage/junit.xml'
-                    // Use the LCOV parser for coverage reporting
-                    recordCoverage(
-                        tools: [[parser: 'LCOV', pattern: 'coverage/lcov.info']]
-                    )
                 }
             }
         }
