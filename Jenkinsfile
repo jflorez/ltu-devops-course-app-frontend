@@ -95,7 +95,7 @@ pipeline {
         // This is useful for learning how configuration works
         string(name: 'OVERRIDE_FRONTEND_PORT', defaultValue: '', description: 'Optional: Change the frontend port (main: 8080, develop: 8081, features: 5000-5499)')
         string(name: 'OVERRIDE_API_PORT', defaultValue: '', description: 'Optional: Change the API port (main: 3001, develop: 3002, features: 3100-3599)')
-        string(name: 'OVERRIDE_API_BASE_URL', defaultValue: '', description: 'Optional: Change where the API is located (default: http://host.docker.internal)')
+        string(name: 'OVERRIDE_API_BASE_URL', defaultValue: '', description: 'Optional: Change where the API is located (default: http://localhost:${API_PORT})')
     }
 
     environment {
