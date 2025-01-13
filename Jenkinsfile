@@ -167,7 +167,7 @@ pipeline {
                 always {
                     // Report JUnit test results
                     junit 'coverage/junit.xml'
-                    cobertura 'coverage/cobertura-coverage.xml'
+                    cobertura coberturaReportFile: 'coverage/cobertura-coverage.xml'
                 }
             }
         }
