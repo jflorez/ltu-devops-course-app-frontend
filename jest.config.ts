@@ -31,7 +31,12 @@ const config: Config.InitialOptions = {
   },
   collectCoverage: true,
   coverageDirectory: 'coverage',
-  coverageReporters: ['html', 'text', 'text-summary', 'json', 'lcov'],
+  coverageReporters: ['html', 'text', 'text-summary', 'cobertura'],
+  coveragePathIgnorePatterns: [
+    '/node_modules/',
+    '/e2e/',
+    '<rootDir>/e2e/'
+  ],
   reporters: [
     'default',
     ['jest-junit', {
