@@ -1,6 +1,8 @@
 # Speedrun Tracker Frontend
 
-Welcome to the Speedrun Tracker Frontend! This Vue.js application provides the user interface for managing and tracking speedruns, demonstrating modern DevOps practices in frontend development.
+This is an educational project designed to demonstrate DevOps practices and principles in a practical context. The application provides a simple speedrun tracking API, serving as a foundation for learning about CI/CD pipelines, containerization, environment management, and other DevOps concepts.
+
+While the application itself offers basic speedrun management functionality, its primary value lies in the implementation of DevOps practices, making it an ideal learning resource for understanding modern software deployment and operations.
 
 ## Table of Contents
 
