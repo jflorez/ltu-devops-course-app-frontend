@@ -217,37 +217,85 @@ gitGraph
 
 ### Configuration Management and 12-Factor Methodology
 
-This frontend application follows the [12-factor app methodology](https://12factor.net/):
+This frontend application demonstrates several principles from the [12-factor app methodology](https://12factor.net/):
 
-#### 1. Config as Environment Variables
+#### I. Codebase
 
-- All configuration in environment variables
-- No hardcoded configuration
-- Pipeline-injected configurations
-- Local-only `.env` files
+- One codebase tracked in Git
+- Multiple deploys: main (prod), develop (test), and feature branches
+- Clear separation between app code and configuration
 
-#### 2. Dev/Prod Parity
+#### II. Dependencies
 
-- Consistent environments
-- Docker-based deployment
-- Configuration-only differences
-- Reliable environment reproduction
+- Explicit dependency declaration in `package.json`
+- Yarn for deterministic dependency management
+- Isolated dependencies through `node_modules`
+- Development dependencies clearly separated in `devDependencies`
 
-#### 3. Port Binding
+#### III. Config
 
-- Self-contained application
-- Configurable ports
-- Dynamic port assignment
-- Environment-specific routing
+- Configuration stored in environment variables
+- Different configs for development/test/production environments
+- Environment variables injected through Docker and Jenkins
+- Sensitive data (API tokens) managed through Jenkins credentials
 
-### Port Management
+#### IV. Backing Services
 
-The pipeline implements dynamic port assignment:
+- API connection treated as attached resource
+- API URL and token configured through environment variables
+- Connection status monitoring implemented
 
-- Production: Fixed port 8080 (http://localhost:8080)
-- Test: Fixed port 8081 (http://localhost:8081)
-- Feature branches: Dynamic ports 5000-5499
-- Port overrides via pipeline parameters
+#### V. Build, Release, Run
+
+- Strict separation of build and run stages in Dockerfile
+- Build stage: Node.js environment for compilation
+- Run stage: Nginx for serving static files
+- Clear distinction between development and production builds
+
+#### VI. Processes
+
+- Application runs as stateless process
+- No local state storage
+- Configuration injected at runtime
+
+#### VII. Port Binding
+
+- Self-contained web server through Nginx
+- Dynamic port assignment based on environment
+- Port configuration through environment variables
+- Production: 8080, Test: 8081, Feature branches: 5000-5499
+
+#### VIII. Concurrency
+
+- Stateless design enables horizontal scaling
+- No shared state between instances
+- Process-based scaling through Docker containers
+
+#### IX. Disposability
+
+- Fast startup through static file serving
+- Graceful shutdown through Nginx
+- Container orchestration ready
+
+#### X. Dev/Prod Parity
+
+- Docker ensures environment consistency
+- Same dependencies across all environments
+- Environment-specific configuration only
+- Consistent testing across environments
+
+#### XI. Logs
+
+- Log output to stdout/stderr
+- Structured logging in development
+- Test results and coverage reports
+- Jenkins collects and aggregates logs
+
+#### XII. Admin Processes
+
+- Database migrations and maintenance tasks not applicable (frontend only)
+- Admin tasks (linting, testing) run as one-off processes
+- Same codebase and configuration used for admin tasks
 
 ## Real-World Considerations
 
