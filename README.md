@@ -29,13 +29,21 @@ While the application itself offers basic speedrun management functionality, its
 
 ## Installation
 
-To get started with the Speedrun Tracker Frontend, follow these steps:
+### Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- Node.js (LTS version recommended)
+- Git
+- Docker (for containerized deployment)
+
+### Getting Started
 
 1. **Clone the repository**:
 
    ```bash
-   git clone https://github.com/yourusername/speedrun-tracker-frontend.git
-   cd speedrun-tracker-frontend
+   git clone https://github.com/jflorez/ltu-devops-course-app-frontend.git
+   cd ltu-devops-course-app-frontend
    ```
 
 2. **Enable Corepack** (required for first time setup):
@@ -50,7 +58,8 @@ To get started with the Speedrun Tracker Frontend, follow these steps:
    yarn install
    ```
 
-4. **Set up environment variables**: Create a `.env` file in the root directory:
+4. **Set up environment variables**:
+   Create a `.env` file in the root directory with the following content:
 
    ```plaintext
    VITE_API_BASE_URL=http://localhost:3001
@@ -58,9 +67,39 @@ To get started with the Speedrun Tracker Frontend, follow these steps:
    HTTP_PORT=8080
    ```
 
+   > Note: Make sure you have the backend service running and accessible at the specified `VITE_API_BASE_URL`.
+
 5. **Start the development server**:
    ```bash
    yarn dev
+   ```
+   The application will be available at `http://localhost:8080` (or the port specified in your `.env` file)
+
+### Docker Development
+
+To run the application using Docker:
+
+1. **Build the Docker image**:
+
+   ```bash
+   docker compose build
+   ```
+
+2. **Start the container**:
+
+   ```bash
+   docker compose up -d
+   ```
+
+3. **View logs** (optional):
+
+   ```bash
+   docker compose logs -f
+   ```
+
+4. **Stop the container**:
+   ```bash
+   docker compose down
    ```
 
 ## Usage
